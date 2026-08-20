@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "app_status": "ONLINE",
+    "min_required_version": "1.0.0",
+    "daily_spin_limit": 4,
+    "auto_reminder_hours": 24,
+    "updated_at": "2026-08-20T17:38:15.015Z"
+  }
+]

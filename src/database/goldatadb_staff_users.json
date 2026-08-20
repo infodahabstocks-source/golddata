@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password_hash": "$2a$10$Peg6Di5u28P.5042Be1T5OsYch4MGFwekjqwVDyEF7Idylw0lUubO",
+    "role": "ADMIN",
+    "full_name": "System Administrator",
+    "is_active": true,
+    "created_at": "2026-08-20T17:26:45.825Z"
+  },
+  {
+    "id": 2,
+    "username": "muxumed",
+    "password_hash": "$2a$10$HQrC.tjO6.PuWdXuvL011uidhprZXNqODF5gpcZKGLrIUTQPbmb4y",
+    "role": "STAFF",
+    "full_name": "muxumed cabdi",
+    "is_active": true,
+    "created_at": "2026-08-20T17:32:14.883Z"
+  }
+]

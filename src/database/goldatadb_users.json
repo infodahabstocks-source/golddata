@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "username": "testuser",
+    "phone_number": "08012345678",
+    "pin_hash": "$2a$10$AC0fSKkVBWO4IliIxBHY9udiqC04uPJijgk4katImerhJWw8iELZK",
+    "profile_image_url": null,
+    "points_balance": 100,
+    "status": "banned",
+    "created_at": "2026-08-20T17:37:03.796Z"
+  },
+  {
+    "id": 2,
+    "username": "alice",
+    "phone_number": "07012345678",
+    "pin_hash": "$2a$10$0JkuWPgI9OY1K9/ld4BWOe71C9itXlsOgvv8PMpXdktMYBVBg.XMa",
+    "profile_image_url": null,
+    "points_balance": 50,
+    "status": "active",
+    "created_at": "2026-08-20T17:38:57.714Z"
+  }
+]

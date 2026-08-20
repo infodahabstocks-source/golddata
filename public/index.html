@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoldData Admin - Sign In</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="login-logo">G</div>
+        <div class="login-title">GoldData Admin</div>
+        <div class="login-sub">Staff &amp; Administrator Console</div>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input id="username" name="username" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" id="login-btn">Sign In</button>
+        <p class="form-hint" style="margin-top:12px;text-align:center">
+          Default account: <b>admin</b> / <b>Admin@123</b> (change it after first login)
+        </p>
+      </form>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script>
+    if (API.token) location.href = 'dashboard.html';
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in\u2026';
+      try {
+        const data = await API.post('/api/admin/auth/login', {
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value
+        });
+        localStorage.setItem('gd_token', data.token);
+        location.href = 'dashboard.html';
+      } catch (err) {
+        toast(err.message, true);
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

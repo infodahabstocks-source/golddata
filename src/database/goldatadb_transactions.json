@@ -1,0 +1,93 @@
+[
+  {
+    "id": 1,
+    "user_id": 1,
+    "package_id": null,
+    "amount_paid": 0,
+    "sim_slot_used": null,
+    "ussd_executed": "",
+    "status": "SUCCESS",
+    "kind": "SPIN",
+    "points_awarded": 0,
+    "notes": "Try Again (NONE)",
+    "timestamp": "2026-08-20T17:37:04.145Z"
+  },
+  {
+    "id": 2,
+    "user_id": 1,
+    "package_id": null,
+    "amount_paid": 0,
+    "sim_slot_used": null,
+    "ussd_executed": "",
+    "status": "SUCCESS",
+    "kind": "SPIN",
+    "points_awarded": 50,
+    "notes": "50 Points (POINTS)",
+    "timestamp": "2026-08-20T17:37:04.202Z"
+  },
+  {
+    "id": 3,
+    "user_id": 1,
+    "package_id": 1,
+    "amount_paid": 50,
+    "sim_slot_used": "SIM1",
+    "ussd_executed": "*131*100*1#",
+    "status": "SUCCESS",
+    "kind": "PURCHASE",
+    "points_awarded": 0,
+    "notes": "MTN 100MB",
+    "timestamp": "2026-08-20T17:37:04.243Z"
+  },
+  {
+    "id": 4,
+    "user_id": 2,
+    "package_id": null,
+    "amount_paid": 0,
+    "sim_slot_used": null,
+    "ussd_executed": "",
+    "status": "SUCCESS",
+    "kind": "SPIN",
+    "points_awarded": 0,
+    "notes": "Try Again (NONE)",
+    "timestamp": "2026-08-20T17:38:58.172Z"
+  },
+  {
+    "id": 5,
+    "user_id": 2,
+    "package_id": null,
+    "amount_paid": 0,
+    "sim_slot_used": null,
+    "ussd_executed": "",
+    "status": "SUCCESS",
+    "kind": "SPIN",
+    "points_awarded": 50,
+    "notes": "50 Points (POINTS)",
+    "timestamp": "2026-08-20T17:38:58.210Z"
+  },
+  {
+    "id": 6,
+    "user_id": 2,
+    "package_id": null,
+    "amount_paid": 0,
+    "sim_slot_used": null,
+    "ussd_executed": "",
+    "status": "SUCCESS",
+    "kind": "SPIN",
+    "points_awarded": 0,
+    "notes": "Try Again (NONE)",
+    "timestamp": "2026-08-20T17:38:58.269Z"
+  },
+  {
+    "id": 7,
+    "user_id": 2,
+    "package_id": null,
+    "amount_paid": 0,
+    "sim_slot_used": null,
+    "ussd_executed": "",
+    "status": "SUCCESS",
+    "kind": "SPIN",
+    "points_awarded": 0,
+    "notes": "100 MB (DATA)",
+    "timestamp": "2026-08-20T17:38:58.339Z"
+  }
+]

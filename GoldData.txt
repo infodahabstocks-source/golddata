@@ -1,0 +1,107 @@
+PROJECT SPECIFICATION & ARCHITECTURE PROMPT FOR AI CODING ASSISTANT
+
+Role & Goal:
+
+You are an expert full-stack engineer and database architect. You are tasked with building the Backend Admin Web-App & Custom JSON Database Engine that controls and feeds data to a companion Android App (Kotlin).
+
+1. Brand Identity & Design System
+Color Palette:
+
+Primary/Accent: Gold (#D4AF37 / #FFD700)
+
+Secondary/Action: Deep Emerald Green (#0F5257 / #1B4D3E)
+
+Background & Cards: Clean White (#FFFFFF) & Soft Light Neutral (#F8F9FA)
+
+Typography/Text: Dark Slate (#1E293B)
+
+UI Style: Modern, clean, and responsive dashboard UI with high contrast and intuitive layout for both Staff and Admin users.
+
+2. Custom JSON Database Engine Specifications
+Instead of standard MySQL/PostgreSQL, we require a Custom JSON-file-based Database System hosted directly inside the web service files.
+
+Database Connection Credentials (Environment Configuration):
+
+DB_HOST = domain (Current website domain)
+
+DB_USER = luka
+
+DB_PASS = luka1000@@
+
+DB_NAME = goldatadb
+
+JSON DB Architecture Requirements:
+
+Store data inside encrypted or access-restricted .json files in a protected /data or /database folder (e.g., goldatadb_users.json, goldatadb_packages.json).
+
+Implement an ORM-like driver or wrapper (e.g., in Node.js/PHP) that authenticates connections using the specified DB_USER, DB_PASS, and DB_NAME before executing CRUD (Create, Read, Update, Delete) operations.
+
+Ensure file-locking mechanisms (e.g., atomic writes) to prevent data corruption during concurrent reads/writes from the Web-App and Mobile App APIs.
+
+3. Core Database Tables (JSON Schemas)
+Create and manage the following structured JSON tables inside goldatadb:
+
+users (User Accounts & Profiles)
+
+id, username, phone_number, pin_hash, profile_image_url, points_balance, status (active/banned), created_at
+
+data_packages (Data Plans & USSD Mapping)
+
+id, package_name, data_amount, price, ussd_code_template (e.g., *712*61XXXXX*1#), is_active (boolean)
+
+daily_spin_config (Gamification & Rewards Engine)
+
+id, label (e.g., "100 MB", "50 Points"), reward_type (DATA, POINTS, NONE), reward_value, win_probability (0.0 to 1.0), is_active
+
+banner_ads (Header Promotions & Ads)
+
+id, banner_title, image_url (WEBP format), target_action (URL or App Screen), is_active, created_at
+
+transactions (Activity & Purchase History)
+
+id, user_id, package_id, amount_paid, sim_slot_used (SIM1/SIM2), ussd_executed, status (SUCCESS, FAILED), timestamp
+
+app_control_settings (Dynamic Global Directives)
+
+id, app_status (ONLINE/MAINTENANCE), min_required_version, daily_spin_limit, auto_reminder_hours (default: 24)
+
+4. Web-App Features & Staff/Admin Capabilities
+The Admin Web-App must serve as the central command hub for the system. Build screens for:
+
+Authentication: Secure login screen for Staff/Admin using hashed credentials and JWT/Session management.
+
+Overview Dashboard: Visual analytics featuring sales charts, active users, total points issued, and system health status.
+
+Data Packages Manager: Interface to add, edit, or disable data packages and update USSD command strings in real time.
+
+Spin Wheel & Rewards Manager: Control game segments, dynamic wheel images, daily limits, and probability rates.
+
+Banner Ads Manager: Upload and manage header banners with start/end scheduling and target click actions.
+
+User & Security Management: View user list, inspect history, reset PINs, block fraudulent accounts, or manually adjust points.
+
+Transaction Logs: Real-time log table for data purchases, rewards claimed, and USSD execution histories.
+
+5. API Endpoints for Android App (Secure Communication)
+Expose secure REST API routes for the Kotlin Android App:
+
+POST /api/v1/auth/register (Multipart: image, username, phone, PIN)
+
+POST /api/v1/auth/login (Phone & PIN authentication)
+
+GET /api/v1/dashboard (Fetches prices, active banners, dynamic app settings, and user stats)
+
+GET /api/v1/spin/config (Fetches active spin wheel segments and probability keys)
+
+POST /api/v1/spin/claim (Server-validated spin outcome recording)
+
+POST /api/v1/transactions/log (Logs completed USSD data purchases)
+
+6. Security & Execution Guidelines
+Encryption: Hash user PINs using Bcrypt before saving them to the JSON store.
+
+Authentication: Require Bearer Tokens (JWT) or API Keys for all Android-to-Web requests.
+
+Access Control: Restrict direct web access to the JSON database folder via .htaccess or server routing middleware.
+
+Please write clean, production-ready code with modular folder structures and full documentation.

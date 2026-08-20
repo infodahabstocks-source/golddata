@@ -1,0 +1,5 @@
+[db] Connected to "goldatadb" as "luka" -> C:\Users\L U K A\OneDrive\Desktop\GoldData\src\database
+[db] Tables: goldatadb_app_control_settings.json, goldatadb_banner_ads.json, goldatadb_daily_spin_config.json, goldatadb_data_packages.json, goldatadb_staff_users.json, goldatadb_transactions.json, goldatadb_users.json
+[server] GoldData backend running at http://localhost:3000
+[server] Admin web-app:  http://localhost:3000/
+[server] Android API:    http://localhost:3000/api/v1

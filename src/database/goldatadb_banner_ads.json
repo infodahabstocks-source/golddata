@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "banner_title": "Launch Offer",
+    "image_url": "/uploads/banners/1787247546640-63ca7bd0.png",
+    "target_action": "https://golddata.app/offer",
+    "is_active": true,
+    "start_at": null,
+    "end_at": null,
+    "created_at": "2026-08-20T17:39:06.643Z"
+  }
+]
