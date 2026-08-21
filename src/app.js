@@ -33,6 +33,7 @@ app.use('/api/admin/users', require('./routes/admin/users.routes'));
 app.use('/api/admin/transactions', require('./routes/admin/transactions.routes'));
 app.use('/api/admin/settings', require('./routes/admin/settings.routes'));
 app.use('/api/admin/database', require('./routes/admin/database.routes'));
+app.use('/api/admin/db', require('./routes/admin/db.routes'));
 
 // ---------------------------------------------------------------
 // Health check

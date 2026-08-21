@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 const { getDb } = require('../../services/bootstrap');
 const { requireStaff } = require('../../middleware/auth');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const { ok, fail, isPin, isPhone, toNumber, paginate } = require('../../utils/helpers');
+const { ok, fail, isPin, sanitizePhone, toNumber, paginate } = require('../../utils/helpers');
 
 const router = express.Router();
 
@@ -37,8 +37,43 @@ router.get(
     if (req.query.status) {
       rows = rows.filter((u) => u.status === req.query.status);
     }
+    if (req.query.date) {
+      const d = String(req.query.date);
+      rows = rows.filter((u) => String(u.created_at || '').slice(0, 10) === d);
+    }
     const page = paginate(rows, req.query.page, req.query.limit);
     return ok(res, { ...page, rows: page.rows.map(sanitizeUser) });
+  })
+);
+
+/** Manually register a new app user from the admin console. */
+router.post(
+  '/',
+  requireStaff,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const username = String(req.body.username || '').trim();
+    const phone = sanitizePhone(req.body.phone_number);
+    const pin = String(req.body.pin || '');
+    if (username.length < 3) return fail(res, 'Username must be at least 3 characters');
+    if (!phone || phone.length < 7 || phone.length > 12) {
+      return fail(res, 'Valid phone number (7-12 digits) is required');
+    }
+    if (!isPin(pin)) return fail(res, 'pin must be 4-8 digits');
+    if (db.table('users').findOne({ phone_number: phone })) {
+      return fail(res, 'Phone number is already registered', 409);
+    }
+    const hash = await bcrypt.hash(pin, 10);
+    const user = await db.table('users').insert({
+      username,
+      phone_number: phone,
+      pin_hash: hash,
+      points_balance: Math.max(0, toNumber(req.body.points_balance, 0)),
+      status: req.body.status === 'banned' ? 'banned' : 'active',
+      profile_image_url: null,
+      created_at: new Date().toISOString()
+    });
+    return ok(res, sanitizeUser(user), 201);
   })
 );
 
@@ -113,17 +148,33 @@ router.put(
       patch.username = String(username).trim();
     }
     if (phone_number !== undefined) {
-      if (!isPhone(phone_number)) return fail(res, 'Valid phone number (10-14 digits) is required');
-      const clash = db.table('users').findOne({ phone_number });
+      const cleanPhone = sanitizePhone(phone_number);
+      if (!cleanPhone || cleanPhone.length < 7 || cleanPhone.length > 12) {
+        return fail(res, 'Valid phone number (7-12 digits) is required');
+      }
+      const clash = db.table('users').findOne({ phone_number: cleanPhone });
       if (clash && Number(clash.id) !== Number(req.params.id)) {
         return fail(res, 'Phone number already in use by another account', 409);
       }
-      patch.phone_number = phone_number;
+      patch.phone_number = cleanPhone;
     }
     if (Object.keys(patch).length === 0) return fail(res, 'Nothing to update');
     const updated = await db.table('users').updateById(req.params.id, patch);
     if (!updated) return fail(res, 'User not found', 404);
     return ok(res, sanitizeUser(updated));
+  })
+);
+
+router.delete(
+  '/:id',
+  requireStaff,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const user = db.table('users').findById(req.params.id);
+    if (!user) return fail(res, 'User not found', 404);
+    const transactionsRemoved = await db.table('transactions').remove({ user_id: user.id });
+    const removed = await db.table('users').removeById(user.id);
+    return ok(res, { deleted: removed.id, transactions_deleted: transactionsRemoved.length });
   })
 );
 

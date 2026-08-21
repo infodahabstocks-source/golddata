@@ -73,18 +73,17 @@ body {
   margin-bottom: 24px;
 }
 .login-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--emerald-deep);
+  width: 68px;
+  height: 68px;
   margin-bottom: 12px;
-  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+  filter: drop-shadow(0 6px 18px rgba(212, 175, 55, 0.35));
+}
+.login-logo img,
+.sidebar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 .login-title { font-size: 20px; font-weight: 700; color: var(--emerald); }
 .login-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
@@ -112,12 +111,12 @@ body {
   border-bottom: 1px solid rgba(212, 175, 55, 0.18);
 }
 .sidebar-logo {
-  width: 38px; height: 38px;
+  width: 40px; height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--gold), var(--gold-hover));
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 16px; color: var(--emerald-deep);
   flex-shrink: 0;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.35));
 }
 .sidebar-title { font-weight: 700; font-size: 15px; letter-spacing: 0.3px; color: var(--text-on-green); }
 .sidebar-sub { font-size: 11px; color: rgba(241, 245, 249, 0.65); }
@@ -431,4 +430,178 @@ input[type="checkbox"] { width: auto; }
   .form-grid { grid-template-columns: 1fr; }
   .sidebar { width: 200px; }
   .main { margin-left: 200px; }
+}
+
+/* ---------- Print report header (screen: hidden) ---------- */
+.print-header { display: none; }
+
+/* ============================================================
+   Intro / loading splash overlay (shown on app startup)
+   Luxury Gold & Emerald keyframe animation system.
+   Markup is injected by js/splash.js; intro.html mirrors it.
+   ============================================================ */
+#app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(1100px 700px at 50% 32%, rgba(212, 175, 55, 0.10), transparent 62%),
+    linear-gradient(160deg, var(--emerald-deep) 0%, var(--emerald) 55%, #0d2b22 100%);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.7s ease, visibility 0.7s ease;
+}
+#app-splash.splash-hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.splash-inner { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px; }
+.splash-logo-wrap {
+  position: relative;
+  width: clamp(104px, 20vw, 140px);
+  height: clamp(104px, 20vw, 140px);
+  margin-bottom: 20px;
+  animation: splashFloat 3.2s ease-in-out infinite;
+}
+.splash-logo {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 28px;
+  animation: splashGlow 2.4s ease-in-out infinite;
+}
+.splash-shine { position: absolute; inset: 0; border-radius: 28px; overflow: hidden; }
+.splash-shine::before {
+  content: '';
+  position: absolute;
+  top: -60%; left: -80%;
+  width: 55%; height: 220%;
+  transform: rotate(25deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: splashShine 2.8s ease-in-out infinite;
+}
+.splash-title { color: var(--gold); font-size: clamp(24px, 5vw, 30px); font-weight: 800; letter-spacing: 1px; }
+.splash-sub {
+  color: rgba(241, 245, 249, 0.65);
+  font-size: 11px;
+  letter-spacing: 4.5px;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+.splash-bar {
+  width: min(260px, 70vw);
+  height: 5px;
+  margin-top: 30px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  overflow: hidden;
+}
+.splash-bar-fill {
+  height: 100%;
+  width: 40%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #9c7c22, var(--gold), var(--gold-light), var(--gold));
+  background-size: 200% 100%;
+  animation: splashBar 1.6s ease-in-out infinite;
+}
+.splash-status {
+  color: rgba(241, 245, 249, 0.55);
+  font-size: 12.5px;
+  letter-spacing: 0.4px;
+  margin-top: 14px;
+}
+
+@keyframes splashGlow {
+  0%, 100% { filter: drop-shadow(0 10px 30px rgba(212, 175, 55, 0.30)); }
+  50% { filter: drop-shadow(0 16px 46px rgba(212, 175, 55, 0.55)); }
+}
+@keyframes splashFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes splashShine { 0% { left: -80%; } 55%, 100% { left: 135%; } }
+@keyframes splashBar {
+  0% { background-position: 200% 0; width: 35%; }
+  50% { width: 68%; }
+  100% { background-position: -60% 0; width: 35%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo-wrap, .splash-logo, .splash-shine::before, .splash-bar-fill { animation: none; }
+}
+
+/* ============================================================
+   PRINT - clean A4 report view (Ctrl+P / "Print Report" button)
+   Hides chrome (sidebar, topbar, toolbars, buttons, modals),
+   renders bordered black-on-white tables for paper or PDF.
+   ============================================================ */
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  body { background: #fff !important; color: #000 !important; font-size: 11px; }
+
+  .sidebar,
+  .topbar,
+  .toolbar,
+  .pagination,
+  .modal-overlay,
+  #toast-wrap,
+  #app-splash,
+  .no-print { display: none !important; }
+
+  .main { margin-left: 0 !important; }
+  .content { padding: 0 !important; }
+
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+  .card-title { color: #000 !important; margin-bottom: 8px !important; }
+
+  .table-wrap { overflow: visible !important; max-height: none !important; }
+  table { width: 100% !important; border-collapse: collapse !important; font-size: 10.5px !important; }
+  th, td {
+    border: 1px solid #94a3b8 !important;
+    padding: 4px 6px !important;
+    color: #000 !important;
+    background: #fff !important;
+    white-space: normal !important;
+  }
+  thead th { background: #e2e8f0 !important; color: #000 !important; border-bottom: 1.5px solid #000 !important; }
+  tbody tr:hover { background: transparent !important; }
+  td.muted, .muted { color: #333 !important; }
+
+  .badge { background: #fff !important; color: #000 !important; border: 1px solid #94a3b8 !important; padding: 1px 6px !important; }
+  .avatar { display: none !important; }
+  .user-cell { gap: 0 !important; }
+  .health-pill { display: none !important; }
+  .empty-state { padding: 12px 0 !important; }
+
+  /* Branded report header */
+  .print-header {
+    display: block !important;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2.5px solid #d4af37;
+  }
+  .print-header .ph-brand {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #0a3a2a;
+    margin-bottom: 2px;
+  }
+  .print-header .ph-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    margin-right: 7px;
+    border: 1.5px solid #d4af37;
+    border-radius: 5px;
+    font-size: 11px;
+  }
+  .print-header .ph-title { font-size: 16px; font-weight: 700; color: #000; }
+  .print-header .ph-meta { font-size: 10px; color: #444; margin-top: 3px; }
 }

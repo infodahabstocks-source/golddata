@@ -2,7 +2,7 @@
 
 /**
  * Android API - Authentication
- * POST /api/v1/auth/register  (multipart: image, username, phone, PIN)
+ * POST /api/v1/auth/register  (JSON: username, phone_number, pin)
  * POST /api/v1/auth/login     (Phone & PIN)
  */
 
@@ -10,22 +10,26 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../../services/bootstrap');
 const { signToken, requireUser } = require('../../middleware/auth');
-const { uploadProfileImage } = require('../../middleware/upload');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const { ok, fail, isPhone, isPin } = require('../../utils/helpers');
+const { ok, fail, sanitizePhone, isPin } = require('../../utils/helpers');
 
 const router = express.Router();
 
 router.post(
   '/register',
-  uploadProfileImage.single('image'),
   asyncHandler(async (req, res) => {
-    const { username, phone, pin } = req.body;
+    const { username, pin } = req.body;
+
+    // CRITICAL: clean the incoming phone before validation/storage
+    // (strips spaces, plus signs and any non-digit characters)
+    const rawPhone = req.body.phone !== undefined ? req.body.phone : req.body.phone_number;
+    const cleanPhone = sanitizePhone(rawPhone);
+
     if (!username || typeof username !== 'string' || username.trim().length < 3) {
       return fail(res, 'Username must be at least 3 characters');
     }
-    if (!isPhone(phone)) {
-      return fail(res, 'Valid phone number (10-14 digits) is required');
+    if (!cleanPhone || cleanPhone.length < 7 || cleanPhone.length > 12) {
+      return fail(res, 'Fadlan gali lambar sax ah (7-9 god)', 400);
     }
     if (!isPin(pin)) {
       return fail(res, 'PIN must be 4-8 digits');
@@ -33,16 +37,16 @@ router.post(
 
     const db = getDb();
     const users = db.table('users');
-    if (users.findOne({ phone_number: phone })) {
+    if (users.findOne({ phone_number: cleanPhone })) {
       return fail(res, 'An account with this phone number already exists', 409);
     }
 
     const pinHash = await bcrypt.hash(pin, 10);
     const user = await users.insert({
       username: username.trim(),
-      phone_number: phone,
+      phone_number: cleanPhone,
       pin_hash: pinHash,
-      profile_image_url: req.file ? `/uploads/profiles/${req.file.filename}` : null,
+      profile_image_url: null,
       points_balance: 0,
       status: 'active',
       created_at: new Date().toISOString()
@@ -66,12 +70,17 @@ router.post(
 router.post(
   '/login',
   asyncHandler(async (req, res) => {
-    const { phone, pin } = req.body;
-    if (!isPhone(phone) || !isPin(pin)) {
-      return fail(res, 'Valid phone and 4-8 digit PIN are required');
+    const { pin } = req.body;
+
+    // CRITICAL: clean the incoming phone before the DB lookup
+    const rawPhone = req.body.phone !== undefined ? req.body.phone : req.body.phone_number;
+    const cleanPhone = sanitizePhone(rawPhone);
+
+    if (!cleanPhone || !isPin(pin)) {
+      return fail(res, 'Invalid phone number or PIN', 401);
     }
     const db = getDb();
-    const user = db.table('users').findOne({ phone_number: phone });
+    const user = db.table('users').findOne({ phone_number: cleanPhone });
     if (!user) return fail(res, 'Invalid phone number or PIN', 401);
 
     const match = await bcrypt.compare(pin, user.pin_hash);

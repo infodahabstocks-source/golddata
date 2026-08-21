@@ -10,8 +10,23 @@ function fail(res, message, status = 400) {
   return res.status(status).json({ success: false, error: message });
 }
 
+/**
+ * Phone sanitizer: strip spaces, plus signs and any non-digit characters.
+ * Returns the cleaned digit string or null when empty.
+ */
+function sanitizePhone(raw) {
+  if (typeof raw !== 'string') return null;
+  const clean = raw.replace(/\D/g, '');
+  return clean.length > 0 ? clean : null;
+}
+
+/**
+ * Flexible phone validation: accepts any clean digit length from 7 to 12.
+ * (Supports 10-digit local numbers and short/regional formats.)
+ */
 function isPhone(phone) {
-  return typeof phone === 'string' && /^[0-9]{10,14}$/.test(phone);
+  const clean = sanitizePhone(phone);
+  return clean !== null && clean.length >= 7 && clean.length <= 12;
 }
 
 function isPin(pin) {
@@ -57,4 +72,4 @@ function todayRange() {
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
-module.exports = { ok, fail, isPhone, isPin, isBoolean, toBoolean, toNumber, paginate, dayKey, todayRange };
+module.exports = { ok, fail, sanitizePhone, isPhone, isPin, isBoolean, toBoolean, toNumber, paginate, dayKey, todayRange };

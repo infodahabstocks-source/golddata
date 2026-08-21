@@ -3,6 +3,7 @@
 buildShell('spin', 'Spin Wheel & Rewards Manager');
 
 let editing = null;
+let allRows = [];
 
 // Luxury palette: Deep Emerald / Metallic Gold / Pure White (alternating, high contrast)
 const WHEEL_COLORS = ['#0A3A2A', '#D4AF37', '#FFFFFF'];
@@ -12,14 +13,49 @@ const WHEEL_POINTS_TEXT = '#D4AF37';
 const HUB_FILL = '#D4AF37';
 const HUB_TEXT = '#0A3A2A';
 
-function render(rows) {
-  const totalProb = rows.filter((r) => r.is_active).reduce((s, r) => s + Number(r.win_probability || 0), 0);
+function segRowHtml(r, i) {
+  return `
+    <tr>
+      <td class="muted">${i + 1}</td>
+      <td><b>${escapeHtml(r.label)}</b></td>
+      <td>${badge(r.reward_type)} ${r.reward_type !== 'NONE' ? `<span class="muted">${r.reward_value}</span>` : ''}</td>
+      <td>${(Number(r.win_probability || 0) * 100).toFixed(1)}%</td>
+      <td>${r.is_active ? badge('true') : badge('false')}</td>
+      <td>
+        <button class="btn btn-sm ${r.is_active ? 'btn-danger' : 'btn-primary'}" onclick="toggleSegment(${r.id})">${r.is_active ? 'Disable' : 'Enable'}</button>
+        <button class="btn btn-sm btn-outline" onclick="editSegment(${r.id})">Edit</button>
+        <button class="btn btn-sm btn-outline" onclick="deleteSegment(${r.id})">Delete</button>
+      </td>
+    </tr>`;
+}
+
+function applySpinFilters() {
+  const q = (document.getElementById('seg-search')?.value || '').trim().toLowerCase();
+  const st = document.getElementById('seg-status')?.value || '';
+  const filtered = allRows.filter((r) => {
+    const hay = `${r.id} ${r.label} ${r.reward_type} ${r.reward_value}`.toLowerCase();
+    return (!q || hay.includes(q)) && (!st || String(r.is_active) === st);
+  });
+  document.getElementById('seg-count').textContent = filtered.length;
+  document.getElementById('seg-tbody').innerHTML = filtered.length
+    ? filtered.map((r, i) => segRowHtml(r, i)).join('')
+    : '<tr><td colspan="6"><div class="empty-state">No segments match</div></td></tr>';
+}
+
+function render() {
+  const totalProb = allRows.filter((r) => r.is_active).reduce((s, r) => s + Number(r.win_probability || 0), 0);
   const c = content();
   c.innerHTML = `
     <div class="toolbar">
       <div class="toolbar-left">
-        <span class="health-pill"><b>${rows.length}</b> segments</span>
-        <span class="health-pill ${totalProb > 1.001 ? '' : ''}">Active probability sum: <b>${(totalProb * 100).toFixed(1)}%</b> ${totalProb > 1.001 ? '(over 100% - reduce!)' : ''}</span>
+        <input class="search-input" id="seg-search" placeholder="Search label or reward\u2026">
+        <select id="seg-status" style="width:auto">
+          <option value="">All statuses</option>
+          <option value="true">Active</option>
+          <option value="false">Disabled</option>
+        </select>
+        <span class="health-pill"><b id="seg-count">0</b> segments</span>
+        <span class="health-pill">Active probability sum: <b>${(totalProb * 100).toFixed(1)}%</b> ${totalProb > 1.001 ? '(over 100% - reduce!)' : ''}</span>
       </div>
       <div class="toolbar-right">
         <button class="btn btn-gold" onclick="openModal('seg-modal')">+ New Segment</button>
@@ -36,20 +72,7 @@ function render(rows) {
         <div class="table-wrap">
           <table>
             <thead><tr><th>Order</th><th>Label</th><th>Reward</th><th>Probability</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-              ${rows.length ? rows.map((r, i) => `
-                <tr>
-                  <td class="muted">${i + 1}</td>
-                  <td><b>${escapeHtml(r.label)}</b></td>
-                  <td>${badge(r.reward_type)} ${r.reward_type !== 'NONE' ? `<span class="muted">${r.reward_value}</span>` : ''}</td>
-                  <td>${(Number(r.win_probability || 0) * 100).toFixed(1)}%</td>
-                  <td>${r.is_active ? badge('true') : badge('false')}</td>
-                  <td>
-                    <button class="btn btn-sm btn-outline" onclick="editSegment(${r.id})">Edit</button>
-                    <button class="btn btn-sm btn-outline" onclick="deleteSegment(${r.id})">Delete</button>
-                  </td>
-                </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state">No segments yet</div></td></tr>'}
-            </tbody>
+            <tbody id="seg-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -85,7 +108,10 @@ function render(rows) {
     </div>
   `;
 
-  renderWheel(rows);
+  document.getElementById('seg-search').addEventListener('input', debounce(applySpinFilters, 250));
+  document.getElementById('seg-status').addEventListener('change', applySpinFilters);
+
+  renderWheel(allRows);
 }
 
 function renderWheel(rows) {
@@ -219,6 +245,17 @@ window.editSegment = (id) => {
   }).catch((err) => toast(err.message, true));
 };
 
+window.toggleSegment = async (id) => {
+  try {
+    const rows = await API.get('/api/admin/spin');
+    const r = rows.find((x) => x.id === id);
+    if (!r) return;
+    await API.put(`/api/admin/spin/${id}`, { is_active: !r.is_active });
+    toast(r.is_active ? 'Segment disabled' : 'Segment enabled');
+    load();
+  } catch (err) { toast(err.message, true); }
+};
+
 window.deleteSegment = async (id) => {
   if (!confirm('Delete this spin segment?')) return;
   try {
@@ -243,8 +280,9 @@ document.addEventListener('submit', (e) => {
 });
 
 async function load() {
-  const rows = await API.get('/api/admin/spin');
-  render(rows);
+  allRows = await API.get('/api/admin/spin');
+  render();
+  applySpinFilters();
 }
 
 load().catch((err) => toast(err.message, true));

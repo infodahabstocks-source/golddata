@@ -241,6 +241,88 @@ router.get(
   })
 );
 
+function isSafeRowId(id) {
+  return typeof id === 'string' && /^[0-9]+$/.test(id);
+}
+
+function assertRowTable(db, name) {
+  if (!isSafeTable(name) || !RESTORE_TABLES.has(name)) {
+    return 'Unknown table';
+  }
+  if (!db.listTables().includes(name)) {
+    return `Table "${name}" does not exist in ${db.dbName}`;
+  }
+  return null;
+}
+
+/** Insert a new record into a managed table (id is auto-assigned by the engine). */
+router.post(
+  '/tables/:name',
+  requireStaff,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const err = assertRowTable(db, req.params.name);
+    if (err) return fail(res, err, 404);
+    const doc = req.body;
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+      return fail(res, 'Record must be a JSON object', 400);
+    }
+    const { id, ...rest } = doc;
+    const row = await db.table(req.params.name).insert(rest);
+    return ok(res, row, 201);
+  })
+);
+
+/** Update an existing record (partial patch; id is never replaced). */
+router.put(
+  '/tables/:name/:rowId',
+  requireStaff,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const err = assertRowTable(db, req.params.name);
+    if (err) return fail(res, err, 404);
+    if (!isSafeRowId(req.params.rowId)) return fail(res, 'Invalid record id', 400);
+    const doc = req.body;
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+      return fail(res, 'Record must be a JSON object', 400);
+    }
+    const { id, ...patch } = doc;
+    const updated = await db.table(req.params.name).updateById(req.params.rowId, patch);
+    if (!updated) return fail(res, 'Record not found', 404);
+    return ok(res, updated);
+  })
+);
+
+/** Delete a record (guarded for critical rows). */
+router.delete(
+  '/tables/:name/:rowId',
+  requireStaff,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const err = assertRowTable(db, req.params.name);
+    if (err) return fail(res, err, 404);
+    if (!isSafeRowId(req.params.rowId)) return fail(res, 'Invalid record id', 400);
+
+    const name = req.params.name;
+    const rowId = req.params.rowId;
+    if (name === 'app_control_settings' && Number(rowId) === 1) {
+      return fail(res, 'The primary app settings record cannot be deleted', 400);
+    }
+    if (name === 'staff_users') {
+      const target = db.table('staff_users').findById(rowId);
+      if (target && target.role === 'ADMIN' && db.table('staff_users').count({ role: 'ADMIN' }) <= 1) {
+        return fail(res, 'Cannot delete the last ADMIN account', 400);
+      }
+    }
+    if (name === 'users') {
+      db.table('transactions').remove({ user_id: Number(rowId) });
+    }
+    const removed = await db.table(name).removeById(rowId);
+    if (!removed) return fail(res, 'Record not found', 404);
+    return ok(res, { deleted: removed.id });
+  })
+);
+
 // ---------------------------------------------------------------
 // Backup & restore
 // ---------------------------------------------------------------

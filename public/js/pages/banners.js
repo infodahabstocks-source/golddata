@@ -3,36 +3,52 @@
 buildShell('banners', 'Banner Ads Manager');
 
 let editing = null;
+let allRows = [];
 
-function render(rows) {
+function bannerCardHtml(b) {
+  return `
+    <div class="banner-card">
+      <img src="${escapeHtml(b.image_url)}" alt="${escapeHtml(b.banner_title)}" loading="lazy">
+      <div class="banner-body">
+        <div class="banner-title">${escapeHtml(b.banner_title)}</div>
+        <div class="banner-meta">Target: <b>${escapeHtml(b.target_action)}</b></div>
+        <div class="banner-meta">Schedule: ${b.start_at ? fmtDate(b.start_at) : 'now'} \u2192 ${b.end_at ? fmtDate(b.end_at) : 'forever'}</div>
+        <div class="banner-meta">Status: ${b.is_active ? badge('true') : badge('false')}</div>
+        <div class="banner-actions">
+          <button class="btn btn-sm btn-outline" onclick="editBanner(${b.id})">Edit</button>
+          <button class="btn btn-sm ${b.is_active ? 'btn-danger' : 'btn-primary'}" onclick="toggleBanner(${b.id})">${b.is_active ? 'Deactivate' : 'Activate'}</button>
+          <button class="btn btn-sm btn-outline" onclick="deleteBanner(${b.id})">Delete</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function applyBannerFilters() {
+  const q = (document.getElementById('banner-search')?.value || '').trim().toLowerCase();
+  const filtered = allRows.filter((b) => {
+    const hay = `${b.id} ${b.banner_title} ${b.target_action}`.toLowerCase();
+    return !q || hay.includes(q);
+  });
+  document.getElementById('banner-count').textContent = filtered.length;
+  document.getElementById('banner-grid').innerHTML = filtered.length
+    ? filtered.map(bannerCardHtml).join('')
+    : '<div class="empty-state" style="grid-column:1/-1"><div class="big">\uD83D\uDD0D</div>No banners match your search</div>';
+}
+
+function render() {
   const c = content();
   c.innerHTML = `
     <div class="toolbar">
       <div class="toolbar-left">
-        <span class="health-pill"><b>${rows.length}</b> banners</span>
+        <input class="search-input" id="banner-search" placeholder="Search title or target action\u2026">
+        <span class="health-pill"><b id="banner-count">0</b> banners</span>
         <span class="health-pill">WEBP format recommended</span>
       </div>
       <div class="toolbar-right">
         <button class="btn btn-gold" onclick="openModal('banner-modal')">+ Upload Banner</button>
       </div>
     </div>
-    <div class="banner-grid">
-      ${rows.length ? rows.map((b) => `
-        <div class="banner-card">
-          <img src="${escapeHtml(b.image_url)}" alt="${escapeHtml(b.banner_title)}" loading="lazy">
-          <div class="banner-body">
-            <div class="banner-title">${escapeHtml(b.banner_title)}</div>
-            <div class="banner-meta">Target: <b>${escapeHtml(b.target_action)}</b></div>
-            <div class="banner-meta">Schedule: ${b.start_at ? fmtDate(b.start_at) : 'now'} \u2192 ${b.end_at ? fmtDate(b.end_at) : 'forever'}</div>
-            <div class="banner-meta">Status: ${b.is_active ? badge('true') : badge('false')}</div>
-            <div class="banner-actions">
-              <button class="btn btn-sm btn-outline" onclick="editBanner(${b.id})">Edit</button>
-              <button class="btn btn-sm ${b.is_active ? 'btn-danger' : 'btn-primary'}" onclick="toggleBanner(${b.id})">${b.is_active ? 'Deactivate' : 'Activate'}</button>
-              <button class="btn btn-sm btn-outline" onclick="deleteBanner(${b.id})">Delete</button>
-            </div>
-          </div>
-        </div>`).join('') : '<div class="empty-state" style="grid-column:1/-1"><div class="big">\uD83D\uDCF0</div>No banners yet - upload your first promotion</div>'}
-    </div>
+    <div class="banner-grid" id="banner-grid"></div>
 
     <div class="modal-overlay" id="banner-modal">
       <div class="modal">
@@ -61,6 +77,14 @@ function render(rows) {
       </div>
     </div>
   `;
+
+  document.getElementById('banner-search').addEventListener('input', debounce(applyBannerFilters, 250));
+}
+
+async function load() {
+  allRows = await API.get('/api/admin/banners');
+  render();
+  applyBannerFilters();
 }
 
 window.editBanner = (id) => {
@@ -115,10 +139,5 @@ document.addEventListener('submit', (e) => {
     load();
   }).catch((err) => toast(err.message, true));
 });
-
-async function load() {
-  const rows = await API.get('/api/admin/banners');
-  render(rows);
-}
 
 load().catch((err) => toast(err.message, true));

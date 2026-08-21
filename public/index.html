@@ -4,13 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GoldData Admin - Sign In</title>
+  <link rel="icon" type="image/webp" href="images/logo.webp">
+  <link rel="apple-touch-icon" href="images/logo.webp">
+  <meta name="theme-color" content="#0a3a2a">
+  <meta name="description" content="GoldData Admin Console - staff &amp; administrator dashboard for data packages, spins, banners and transactions.">
+  <meta property="og:title" content="GoldData Admin">
+  <meta property="og:description" content="Staff &amp; Administrator Console">
+  <meta property="og:image" content="images/logo.webp">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="login-page">
     <div class="login-card">
       <div class="login-brand">
-        <div class="login-logo">G</div>
+        <div class="login-logo"><img src="images/logo.webp" alt="GoldData logo"></div>
         <div class="login-title">GoldData Admin</div>
         <div class="login-sub">Staff &amp; Administrator Console</div>
       </div>
@@ -30,6 +39,7 @@
       </form>
     </div>
   </div>
+  <script src="js/splash.js"></script>
   <script src="js/api.js"></script>
   <script>
     if (API.token) location.href = 'dashboard.html';

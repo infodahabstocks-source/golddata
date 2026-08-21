@@ -3,12 +3,51 @@
 buildShell('packages', 'Data Packages Manager');
 
 let editing = null;
+let allRows = [];
 
-function render(rows) {
+function pkgRowHtml(p) {
+  return `
+    <tr>
+      <td>#${p.id}</td>
+      <td><b>${escapeHtml(p.package_name)}</b></td>
+      <td>${escapeHtml(p.data_amount)}</td>
+      <td><b>${fmtMoney(p.price)}</b></td>
+      <td class="muted" style="font-family:Consolas,monospace">${escapeHtml(p.ussd_code_template)}</td>
+      <td>${p.is_active ? badge('true') : badge('false')}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="editPackage(${p.id})">Edit</button>
+        <button class="btn btn-sm ${p.is_active ? 'btn-danger' : 'btn-primary'}" onclick="togglePackage(${p.id})">${p.is_active ? 'Disable' : 'Enable'}</button>
+        <button class="btn btn-sm btn-outline" onclick="deletePackage(${p.id})">Delete</button>
+      </td>
+    </tr>`;
+}
+
+function applyPkgFilters() {
+  const q = (document.getElementById('pkg-search')?.value || '').trim().toLowerCase();
+  const st = document.getElementById('pkg-status')?.value || '';
+  const filtered = allRows.filter((p) => {
+    const hay = `${p.id} ${p.package_name} ${p.data_amount} ${p.price} ${p.ussd_code_template}`.toLowerCase();
+    return (!q || hay.includes(q)) && (!st || String(p.is_active) === st);
+  });
+  document.getElementById('pkg-count').textContent = filtered.length;
+  document.getElementById('pkg-tbody').innerHTML = filtered.length
+    ? filtered.map(pkgRowHtml).join('')
+    : '<tr><td colspan="7"><div class="empty-state">No packages match</div></td></tr>';
+}
+
+function render() {
   const c = content();
   c.innerHTML = `
     <div class="toolbar">
-      <div class="toolbar-left"><span class="health-pill"><b>${rows.length}</b> packages</span></div>
+      <div class="toolbar-left">
+        <input class="search-input" id="pkg-search" placeholder="Search name, data, price or USSD\u2026">
+        <select id="pkg-status" style="width:auto">
+          <option value="">All statuses</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+        <span class="health-pill"><b id="pkg-count">0</b> packages</span>
+      </div>
       <div class="toolbar-right">
         <button class="btn btn-gold" onclick="openModal('pkg-modal')">+ New Package</button>
       </div>
@@ -17,22 +56,7 @@ function render(rows) {
       <div class="table-wrap">
         <table>
           <thead><tr><th>ID</th><th>Package</th><th>Data</th><th>Price</th><th>USSD Template</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${rows.length ? rows.map((p) => `
-              <tr>
-                <td>#${p.id}</td>
-                <td><b>${escapeHtml(p.package_name)}</b></td>
-                <td>${escapeHtml(p.data_amount)}</td>
-                <td><b>${fmtMoney(p.price)}</b></td>
-                <td class="muted" style="font-family:Consolas,monospace">${escapeHtml(p.ussd_code_template)}</td>
-                <td>${p.is_active ? badge('true') : badge('false')}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline" onclick="editPackage(${p.id})">Edit</button>
-                  <button class="btn btn-sm ${p.is_active ? 'btn-danger' : 'btn-primary'}" onclick="togglePackage(${p.id})">${p.is_active ? 'Disable' : 'Enable'}</button>
-                  <button class="btn btn-sm btn-outline" onclick="deletePackage(${p.id})">Delete</button>
-                </td>
-              </tr>`).join('') : '<tr><td colspan="7"><div class="empty-state">No packages yet</div></td></tr>'}
-          </tbody>
+          <tbody id="pkg-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -63,11 +87,15 @@ function render(rows) {
       </div>
     </div>
   `;
+
+  document.getElementById('pkg-search').addEventListener('input', debounce(applyPkgFilters, 250));
+  document.getElementById('pkg-status').addEventListener('change', applyPkgFilters);
 }
 
 async function load() {
-  const rows = await API.get('/api/admin/packages');
-  render(rows);
+  allRows = await API.get('/api/admin/packages');
+  render();
+  applyPkgFilters();
 }
 
 window.editPackage = (id) => {

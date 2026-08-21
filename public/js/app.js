@@ -15,13 +15,14 @@ const NAV_ITEMS = [
 
 function buildShell(pageId, title) {
   requireAuth();
+  const splash = document.getElementById('app-splash');
   document.body.innerHTML = '';
 
   const sidebar = document.createElement('aside');
   sidebar.className = 'sidebar';
   sidebar.innerHTML = `
     <div class="sidebar-brand">
-      <div class="sidebar-logo">G</div>
+      <img src="images/logo.webp" alt="GoldData logo" class="sidebar-logo">
       <div>
         <div class="sidebar-title">GoldData</div>
         <div class="sidebar-sub">Admin Console</div>
@@ -52,6 +53,7 @@ function buildShell(pageId, title) {
 
   document.body.appendChild(sidebar);
   document.body.appendChild(main);
+  if (splash) document.body.appendChild(splash);
   modalCloseButtons();
 
   API.get('/api/admin/auth/me').then((staff) => {

@@ -89,5 +89,13 @@
     "points_awarded": 0,
     "notes": "100 MB (DATA)",
     "timestamp": "2026-08-20T17:38:58.339Z"
+  },
+  {
+    "id": 8,
+    "user_id": 1,
+    "kind": "TEMP",
+    "amount_paid": 0,
+    "status": "SUCCESS",
+    "timestamp": "2026-08-21T00:00:00.000Z"
   }
 ]

@@ -7,9 +7,10 @@
 
 const express = require('express');
 const { getDb } = require('../../services/bootstrap');
+const { requireStaff } = require('../../middleware/auth');
 const { requireUser } = require('../../middleware/auth');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const { ok, fail, isPhone } = require('../../utils/helpers');
+const { ok, fail } = require('../../utils/helpers');
 
 const router = express.Router();
 
@@ -52,6 +53,18 @@ router.post(
     });
 
     return ok(res, { logged: true }, 201);
+  })
+);
+
+/** Delete a transaction log entry (admin/staff). */
+router.delete(
+  '/transactions/:id',
+  requireStaff,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const removed = await db.table('transactions').removeById(req.params.id);
+    if (!removed) return fail(res, 'Transaction not found', 404);
+    return ok(res, { deleted: removed.id });
   })
 );
 

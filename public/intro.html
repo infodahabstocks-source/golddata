@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - GoldData Admin</title>
+  <link rel="icon" type="image/webp" href="images/logo.webp">
+  <link rel="apple-touch-icon" href="images/logo.webp">
+  <meta name="theme-color" content="#0a3a2a">
+  <meta name="description" content="GoldData Admin Console - staff &amp; administrator dashboard for data packages, spins, banners and transactions.">
+  <meta property="og:title" content="GoldData Admin">
+  <meta property="og:description" content="Staff &amp; Administrator Console">
+  <meta property="og:image" content="images/logo.webp">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <style>
+    :root {
+      --emerald: #0a3a2a;
+      --emerald-deep: #06261c;
+      --gold: #d4af37;
+      --gold-light: #f6e27a;
+      --text-on-green: #f1f5f9;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      height: 100vh; overflow: hidden;
+      background:
+        radial-gradient(1100px 700px at 50% 32%, rgba(212, 175, 55, 0.10), transparent 62%),
+        linear-gradient(160deg, var(--emerald-deep) 0%, var(--emerald) 55%, #0d2b22 100%);
+    }
+    .intro {
+      height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 1; visibility: visible;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+    .intro.intro-hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    .intro-inner { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px; }
+
+    .intro-logo-wrap {
+      position: relative;
+      width: clamp(104px, 22vw, 148px);
+      height: clamp(104px, 22vw, 148px);
+      margin-bottom: 22px;
+      animation: introFloat 3.2s ease-in-out infinite;
+    }
+    .intro-logo {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+      border-radius: 28px;
+      animation: introGlow 2.4s ease-in-out infinite;
+    }
+    .intro-shine { position: absolute; inset: 0; border-radius: 28px; overflow: hidden; }
+    .intro-shine::before {
+      content: '';
+      position: absolute; top: -60%; left: -80%;
+      width: 55%; height: 220%;
+      transform: rotate(25deg);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      animation: introShine 2.8s ease-in-out infinite;
+    }
+
+    .intro-title { color: var(--gold); font-size: clamp(24px, 5vw, 30px); font-weight: 800; letter-spacing: 1px; }
+    .intro-sub {
+      color: rgba(241, 245, 249, 0.65);
+      font-size: 11px; letter-spacing: 4.5px; text-transform: uppercase; margin-top: 6px;
+    }
+
+    .intro-bar {
+      width: min(260px, 70vw); height: 5px;
+      margin-top: 30px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      overflow: hidden;
+    }
+    .intro-bar-fill {
+      height: 100%; width: 40%; border-radius: 99px;
+      background: linear-gradient(90deg, #9c7c22, var(--gold), var(--gold-light), var(--gold));
+      background-size: 200% 100%;
+      animation: introBar 1.6s ease-in-out infinite;
+    }
+    .intro-status {
+      color: rgba(241, 245, 249, 0.55);
+      font-size: 12.5px; letter-spacing: 0.4px; margin-top: 14px;
+      transition: color 0.3s ease;
+    }
+    .intro-status.ok { color: var(--gold-light); }
+
+    @keyframes introGlow {
+      0%, 100% { filter: drop-shadow(0 10px 30px rgba(212, 175, 55, 0.30)); }
+      50% { filter: drop-shadow(0 16px 46px rgba(212, 175, 55, 0.55)); }
+    }
+    @keyframes introFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    @keyframes introShine { 0% { left: -80%; } 55%, 100% { left: 135%; } }
+    @keyframes introBar {
+      0% { background-position: 200% 0; width: 35%; }
+      50% { width: 68%; }
+      100% { background-position: -60% 0; width: 35%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .intro-logo-wrap, .intro-logo, .intro-shine::before, .intro-bar-fill { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="intro" id="intro">
+    <div class="intro-inner">
+      <div class="intro-logo-wrap">
+        <img src="images/logo.webp" alt="GoldData logo" class="intro-logo">
+        <div class="intro-shine"></div>
+      </div>
+      <div class="intro-title">GoldData</div>
+      <div class="intro-sub">Admin Console</div>
+      <div class="intro-bar"><div class="intro-bar-fill"></div></div>
+      <div class="intro-status" id="intro-status">Connecting to secure database&hellip;</div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+    (function () {
+      const MIN_SPLASH_MS = 1400;
+      const MAX_SPLASH_MS = 6000;
+
+      const overlay = document.getElementById('intro');
+      const status = document.getElementById('intro-status');
+
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const setStatus = (text, ok) => {
+        status.textContent = text;
+        status.classList.toggle('ok', !!ok);
+      };
+
+      function leave() {
+        overlay.classList.add('intro-hide');
+        setTimeout(() => {
+          const hasSession = !!localStorage.getItem('gd_token');
+          location.replace(hasSession ? 'dashboard.html' : 'index.html');
+        }, 720);
+      }
+
+      const backendReady = fetch('/health', { cache: 'no-store' })
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(() => setStatus('Database online \u2014 preparing console\u2026'))
+        .catch(() => setStatus('Running in offline mode\u2026'));
+
+      let sessionValid = Promise.resolve(false);
+      if (localStorage.getItem('gd_token')) {
+        sessionValid = fetch('/api/admin/auth/me', {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('gd_token') }
+        }).then((r) => r.ok).catch(() => false);
+      }
+
+      const winLoaded = document.readyState === 'complete'
+        ? Promise.resolve()
+        : new Promise((r) => window.addEventListener('load', r, { once: true }));
+
+      Promise.race([
+        Promise.all([wait(MIN_SPLASH_MS), backendReady, sessionValid, winLoaded]),
+        wait(MAX_SPLASH_MS)
+      ]).then(() => {
+        setStatus('Welcome to GoldData', true);
+        setTimeout(leave, 450);
+      });
+    })();
+  </script>
+</body>
+</html>
