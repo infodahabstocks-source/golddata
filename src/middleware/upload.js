@@ -1,8 +1,7 @@
 'use strict';
 
 /**
- * Multer configuration for file uploads (banner ads only).
- * Profile picture uploads were removed - accounts are text-only records.
+ * Multer configuration for file uploads.
  */
 
 const path = require('path');
@@ -41,4 +40,14 @@ const uploadBannerImage = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-module.exports = { uploadBannerImage, UPLOAD_DIR: env.UPLOAD_DIR };
+const uploadProfileImage = multer({
+  storage: makeStorage('profiles'),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+module.exports = {
+  uploadBannerImage,
+  uploadProfileImage,
+  UPLOAD_DIR: env.UPLOAD_DIR
+};

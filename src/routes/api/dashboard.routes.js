@@ -13,6 +13,19 @@ const { ok } = require('../../utils/helpers');
 
 const router = express.Router();
 
+/**
+ * Public health check for the Android client.
+ * GET /api/v1/health
+ */
+router.get('/health', (req, res) => {
+  return res.status(200).json({
+    status: "ONLINE",
+    database: "CONNECTED",
+    db_name: process.env.DB_NAME || "goldatadb",
+    timestamp: Math.floor(Date.now() / 1000)
+  });
+});
+
 router.get(
   '/dashboard',
   requireUser,

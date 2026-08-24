@@ -2,8 +2,8 @@
 
 /**
  * Android API - Authentication
- * POST /api/v1/auth/register  (JSON: username, phone_number, pin)
- * POST /api/v1/auth/login     (Phone & PIN)
+ * POST /api/v1/auth/register  (Multipart: username, phone, pin, [image])
+ * POST /api/v1/auth/login     (JSON: phone, pin)
  */
 
 const express = require('express');
@@ -12,16 +12,27 @@ const { getDb } = require('../../services/bootstrap');
 const { signToken, requireUser } = require('../../middleware/auth');
 const { asyncHandler } = require('../../middleware/errorHandler');
 const { ok, fail, sanitizePhone, isPin } = require('../../utils/helpers');
+const { uploadProfileImage } = require('../../middleware/upload');
 
 const router = express.Router();
 
+/** Public health check for the auth module */
+router.get('/health', (req, res) => {
+  res.json({
+    status: 'ONLINE',
+    module: 'auth',
+    timestamp: Math.floor(Date.now() / 1000)
+  });
+});
+
 router.post(
   '/register',
+  uploadProfileImage.single('image'),
   asyncHandler(async (req, res) => {
+    // With multer, text fields are in req.body
     const { username, pin } = req.body;
 
     // CRITICAL: clean the incoming phone before validation/storage
-    // (strips spaces, plus signs and any non-digit characters)
     const rawPhone = req.body.phone !== undefined ? req.body.phone : req.body.phone_number;
     const cleanPhone = sanitizePhone(rawPhone);
 
@@ -42,11 +53,18 @@ router.post(
     }
 
     const pinHash = await bcrypt.hash(pin, 10);
+
+    // If an image was uploaded, store the path
+    let profileImageUrl = null;
+    if (req.file) {
+      profileImageUrl = `/uploads/profiles/${req.file.filename}`;
+    }
+
     const user = await users.insert({
       username: username.trim(),
       phone_number: cleanPhone,
       pin_hash: pinHash,
-      profile_image_url: null,
+      profile_image_url: profileImageUrl,
       points_balance: 0,
       status: 'active',
       created_at: new Date().toISOString()
@@ -72,7 +90,6 @@ router.post(
   asyncHandler(async (req, res) => {
     const { pin } = req.body;
 
-    // CRITICAL: clean the incoming phone before the DB lookup
     const rawPhone = req.body.phone !== undefined ? req.body.phone : req.body.phone_number;
     const cleanPhone = sanitizePhone(rawPhone);
 
